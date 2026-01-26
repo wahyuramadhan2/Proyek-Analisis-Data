@@ -32,17 +32,18 @@ Tujuan dari proyek ini adalah:
 git clone https://github.com/USERNAME_KAMU/Proyek-Analisis-Data.git
 cd Proyek-Analisis-Data
 
-**2. Install Dependency**
+### 2. Install Dependency
 
 Pastikan Python sudah terinstall, lalu jalankan:
 
 pip install -r requirements.txt
 
-**3. Jalankan Dashboard Streamlit
-** streamlit run dashboard/proyek_analisis_data.py
+### 3. Jalankan Dashboard Streamlit
+streamlit run dashboard/proyek_analisis_data.py
 
-**4. Akses Dashboard**
+### 4. Akses Dashboard
 
 Buka browser dan akses:
 
 http://localhost:8501
+
