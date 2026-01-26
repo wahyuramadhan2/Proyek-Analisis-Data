@@ -24,7 +24,7 @@ st.caption("Visualisasi hasil Exploratory Data Analysis (EDA)")
 # ===============================
 @st.cache_data
 def load_data():
-    url = "https://drive.google.com/file/d/1u4I0OvFlXKCKgwQcq0AGr7S_xZxJ6Tqd/view?usp=drive_link"
+    url = "https://drive.google.com/uc?id=1u4I0OvFlXKCKgwQcq0AGr7S_xZxJ6Tqd"
     return pd.read_csv(url)
 
 try:
