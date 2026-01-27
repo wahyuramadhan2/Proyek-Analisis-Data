@@ -189,7 +189,7 @@ if filtered_df.empty:
 # ===============================
 # BUSINESS QUESTIONS
 # ===============================
-st.header("📌 Pertanyaan Bisnis")
+st.header("📌 Pertanyaan")
 
 st.markdown("""
 1. Bagaimana dinamika konsentrasi PM2.5 selama periode 2013–2017 di seluruh stasiun pemantauan?  
