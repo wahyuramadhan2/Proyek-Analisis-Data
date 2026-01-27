@@ -2,15 +2,11 @@
 # IMPORT LIBRARIES
 # ===============================
 import streamlit as st
-
 import pandas as pd
 import numpy as np
-
 import matplotlib.pyplot as plt
 import seaborn as sns
 import matplotlib.dates as mdates
-
-import os
 import re
 
 # ===============================
@@ -22,53 +18,116 @@ st.set_page_config(
 )
 
 # ===============================
-# BUSINESS QUESTIONS (SESUAI NOTEBOOK)
+# TITLE
 # ===============================
-st.header("📌 Pertanyaan")
+st.title("📊 Dashboard Analisis Kualitas Udara")
+st.caption("Visualisasi hasil Exploratory Data Analysis (EDA) PM2.5")
+
+# ===============================
+# GOOGLE DRIVE HELPER
+# ===============================
+def gdrive_to_direct(url: str) -> str:
+    """
+    Convert Google Drive link or file-id to direct CSV download URL
+    """
+    patterns = [
+        r"drive\.google\.com\/file\/d\/([a-zA-Z0-9_-]+)",
+        r"id=([a-zA-Z0-9_-]+)"
+    ]
+
+    file_id = None
+    for p in patterns:
+        m = re.search(p, url)
+        if m:
+            file_id = m.group(1)
+            break
+
+    if not file_id:
+        return None
+
+    return f"https://drive.google.com/uc?export=download&id={file_id}"
+
+# ===============================
+# LOAD DATA FROM GOOGLE DRIVE
+# ===============================
+DRIVE_LINK = "https://drive.google.com/file/d/1jtCEpbC0Vy-z8mxtse0FBRQH3Gcxg8vt/"
+
+@st.cache_data
+def load_data_from_drive(link):
+    direct_url = gdrive_to_direct(link)
+    if direct_url is None:
+        raise ValueError("Link Google Drive tidak valid")
+    return pd.read_csv(direct_url)
+
+try:
+    air_quality_df = load_data_from_drive(DRIVE_LINK)
+    st.success("✅ Data berhasil dimuat dari Google Drive")
+except Exception as e:
+    st.error("❌ Gagal memuat data dari Google Drive")
+    st.exception(e)
+    st.stop()
+
+# ===============================
+# PREPROCESSING DASAR
+# ===============================
+required_cols = ["datetime", "station", "PM2.5"]
+missing_cols = [c for c in required_cols if c not in air_quality_df.columns]
+
+if missing_cols:
+    st.error(f"Kolom wajib tidak ditemukan: {missing_cols}")
+    st.write("Kolom tersedia:", air_quality_df.columns.tolist())
+    st.stop()
+
+air_quality_df["datetime"] = pd.to_datetime(
+    air_quality_df["datetime"], errors="coerce"
+)
+air_quality_df = air_quality_df.dropna(subset=["datetime"])
+air_quality_df["year"] = air_quality_df["datetime"].dt.year
+
+# ===============================
+# SIDEBAR FILTER
+# ===============================
+with st.sidebar:
+    st.header("⚙️ Filter Data")
+
+    stations = sorted(air_quality_df["station"].unique())
+    selected_stations = st.multiselect(
+        "Pilih Stasiun",
+        stations,
+        default=stations
+    )
+
+    year_min = int(air_quality_df["year"].min())
+    year_max = int(air_quality_df["year"].max())
+    year_range = st.slider(
+        "Rentang Tahun",
+        year_min,
+        year_max,
+        (year_min, year_max)
+    )
+
+filtered_df = air_quality_df[
+    (air_quality_df["station"].isin(selected_stations)) &
+    (air_quality_df["year"] >= year_range[0]) &
+    (air_quality_df["year"] <= year_range[1])
+]
+
+if filtered_df.empty:
+    st.warning("Data kosong setelah filter.")
+    st.stop()
+
+# ===============================
+# BUSINESS QUESTIONS
+# ===============================
+st.header("📌 Pertanyaan Analisis")
 
 st.markdown("""
-1. **Bagaimana dinamika konsentrasi PM2.5 sepanjang tahun 2013–2017 berdasarkan data historis??**  
-2. **Sejauh mana perbedaan konsentrasi PM2.5 antar stasiun pemantauan selama periode pengamatan 2013–2017?**
+1. **Bagaimana dinamika konsentrasi PM2.5 sepanjang tahun 2013–2017 berdasarkan data historis?**  
+2. **Bagaimana variasi konsentrasi PM2.5 antar stasiun pemantauan selama periode 2013–2017?**
 """)
 
-st.markdown("---")
-st.caption("Catatan: Analisis weekday/weekend dan pola Senin–Minggu disajikan sebagai analisis tambahan untuk memperkuat interpretasi dinamika PM2.5.")
-
 # ===============================
-# Q1 - DAILY PM2.5 (SESUAI NOTEBOOK)
-# ===============================
-daily_pm25 = (
-    filtered_df
-    .set_index("datetime")
-    .groupby("station")["PM2.5"]
-    .resample("D")
-    .mean()
-    .reset_index()
-)
-
-st.subheader("📈 Dinamika PM2.5 Harian (2013–2017) per Stasiun")
-fig, ax = plt.subplots(figsize=(14, 6))
-sns.lineplot(
-    data=daily_pm25,
-    x="datetime",
-    y="PM2.5",
-    hue="station",
-    linewidth=1,
-    ax=ax
-)
-
-ax.set_title("Dinamika Konsentrasi PM2.5 Harian (2013–2017) per Stasiun")
-ax.set_xlabel("Waktu")
-ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=2))
-ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
-plt.xticks(rotation=45)
-ax.legend(title="Stasiun", bbox_to_anchor=(1.02, 1), loc="upper left")
-plt.tight_layout()
-st.pyplot(fig)
-
-# ===============================
-# Q1 - MONTHLY PM2.5 (SESUAI NOTEBOOK)
+# Q1 – TREN BULANAN PM2.5
 # ===============================
 monthly_pm25 = (
     filtered_df
@@ -79,29 +138,30 @@ monthly_pm25 = (
     .reset_index()
 )
 
-st.subheader("📈 Pola Bulanan PM2.5 (2013–2017) per Stasiun")
+st.subheader("📈 Tren Bulanan PM2.5")
+
 fig, ax = plt.subplots(figsize=(14, 6))
 sns.lineplot(
     data=monthly_pm25,
     x="datetime",
     y="PM2.5",
     hue="station",
-    linewidth=1,
+    linewidth=1.2,
     ax=ax
 )
 
-ax.set_title("Pola Bulanan Konsentrasi PM2.5 (2013–2017) per Stasiun")
+ax.set_title("Tren Bulanan Konsentrasi PM2.5 (2013–2017)")
 ax.set_xlabel("Waktu")
 ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
-ax.xaxis.set_major_locator(mdates.MonthLocator(interval=3))
-ax.xaxis.set_major_formatter(mdates.DateFormatter("%b %Y"))
+ax.xaxis.set_major_locator(mdates.YearLocator())
+ax.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
 plt.xticks(rotation=45)
 ax.legend(title="Stasiun", bbox_to_anchor=(1.02, 1), loc="upper left")
 plt.tight_layout()
 st.pyplot(fig)
 
 # ===============================
-# Q2 - ANNUAL COMPARISON (SESUAI NOTEBOOK: pakai datetime resample Y)
+# Q2 – PERBANDINGAN TAHUNAN ANTAR STASIUN
 # ===============================
 annual_pm25 = (
     filtered_df
@@ -112,7 +172,8 @@ annual_pm25 = (
     .reset_index()
 )
 
-st.subheader("🏭 Perbandingan Konsentrasi PM2.5 Tahunan Antar Stasiun (2013–2017)")
+st.subheader("🏭 Perbandingan PM2.5 Tahunan Antar Stasiun")
+
 fig, ax = plt.subplots(figsize=(14, 6))
 sns.lineplot(
     data=annual_pm25,
@@ -124,7 +185,7 @@ sns.lineplot(
     ax=ax
 )
 
-ax.set_title("Perbandingan Konsentrasi PM2.5 Tahunan Antar Stasiun (2013–2017)")
+ax.set_title("Perbandingan Konsentrasi PM2.5 Tahunan (2013–2017)")
 ax.set_xlabel("Tahun")
 ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
 ax.xaxis.set_major_locator(mdates.YearLocator())
@@ -134,89 +195,6 @@ plt.tight_layout()
 st.pyplot(fig)
 
 # ===============================
-# ANALISIS TAMBAHAN - WEEKDAY vs WEEKEND (SESUAI NOTEBOOK: Indonesia)
+# FOOTER
 # ===============================
-st.markdown("---")
-st.subheader("📅 Analisis Tambahan: Hari Kerja vs Akhir Pekan")
-
-filtered_df["weekday"] = filtered_df["datetime"].dt.weekday
-filtered_df["jenis_hari"] = np.where(
-    filtered_df["weekday"] < 5,
-    "Hari Kerja",
-    "Akhir Pekan"
-)
-
-pm25_daytype_avg = (
-    filtered_df
-    .groupby(["station", "jenis_hari"])["PM2.5"]
-    .mean()
-    .reset_index()
-)
-
-pm25_pivot = pm25_daytype_avg.pivot(
-    index="station",
-    columns="jenis_hari",
-    values="PM2.5"
-)
-
-# antisipasi kolom hilang
-for col in ["Hari Kerja", "Akhir Pekan"]:
-    if col not in pm25_pivot.columns:
-        pm25_pivot[col] = np.nan
-
-stations = pm25_pivot.index
-x = np.arange(len(stations))
-width = 0.35
-
-fig, ax = plt.subplots(figsize=(12, 5))
-ax.bar(x - width/2, pm25_pivot["Hari Kerja"], width, label="Hari Kerja")
-ax.bar(x + width/2, pm25_pivot["Akhir Pekan"], width, label="Akhir Pekan")
-
-ax.set_title("Rata-rata PM2.5: Hari Kerja vs Akhir Pekan per Stasiun")
-ax.set_xlabel("Stasiun Pemantauan")
-ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
-ax.set_xticks(x)
-ax.set_xticklabels(stations, rotation=45)
-ax.legend()
-plt.tight_layout()
-st.pyplot(fig)
-
-# ===============================
-# ANALISIS TAMBAHAN - POLA SENIN–MINGGU (SESUAI NOTEBOOK)
-# ===============================
-st.subheader("🗓️ Analisis Tambahan: Pola Harian PM2.5 (Senin–Minggu)")
-
-filtered_df["weekday_name"] = filtered_df["datetime"].dt.day_name()
-
-weekday_order = [
-    "Monday", "Tuesday", "Wednesday",
-    "Thursday", "Friday", "Saturday", "Sunday"
-]
-
-avg_pm25_weekday = (
-    filtered_df
-    .groupby(["station", "weekday_name"])["PM2.5"]
-    .mean()
-    .reset_index()
-)
-
-fig, ax = plt.subplots(figsize=(12, 5))
-
-for st_name in avg_pm25_weekday["station"].unique():
-    subset = avg_pm25_weekday[avg_pm25_weekday["station"] == st_name]
-    subset = subset.set_index("weekday_name").reindex(weekday_order)
-
-    ax.plot(
-        weekday_order,
-        subset["PM2.5"],
-        marker="o",
-        label=st_name
-    )
-
-ax.set_title("Pola Rata-rata PM2.5 Berdasarkan Hari dalam Minggu")
-ax.set_xlabel("Hari")
-ax.set_ylabel("Rata-rata PM2.5 (µg/m³)")
-plt.xticks(rotation=45)
-ax.legend(title="Stasiun", bbox_to_anchor=(1.02, 1), loc="upper left")
-plt.tight_layout()
-st.pyplot(fig)
+st.caption("© 2026 – Dashboard Analisis Kualitas Udara (Streamlit)")
