@@ -192,8 +192,9 @@ if filtered_df.empty:
 st.header("📌 Pertanyaan Bisnis")
 
 st.markdown("""
-1. Bagaimana tren konsentrasi PM2.5 pada periode 2013–2017?  
-2. Bagaimana perbandingan PM2.5 antar stasiun?
+1. Bagaimana dinamika konsentrasi PM2.5 selama periode 2013–2017 di seluruh stasiun pemantauan?  
+2. Stasiun mana yang cenderung memiliki rata-rata PM2.5 tertinggi dan terendah selama 2013–2017?
+3. Bagaimana perbedaan pola konsentrasi PM2.5 antara hari kerja dan akhir pekan serta bagaimana variasi pola hariannya dari Senin hingga Minggu selama periode 2013–2017?
 """)
 
 # ===============================
