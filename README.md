@@ -67,7 +67,7 @@ pip install -r requirements.txt
 2. Jalankan dashboard:
 
 ```bash
-streamlit run dashboard/proyek_analisis_data.py
+streamlit run dashboard/app.py
 ```
 
 Dashboard akan otomatis terbuka di browser.
@@ -79,3 +79,4 @@ Dashboard akan otomatis terbuka di browser.
 * **Nama:** Mochammad Wahyu Ramadhan
 * **Email:** [wahyuramadhan9090@gmail.com](mailto:wahyuramadhan9090@gmail.com)
 * **ID Dicoding:** wahyuramadhan
+
