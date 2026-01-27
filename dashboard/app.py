@@ -1,4 +1,27 @@
 # ===============================
+# IMPORT LIBRARIES
+# ===============================
+import streamlit as st
+
+import pandas as pd
+import numpy as np
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+import matplotlib.dates as mdates
+
+import os
+import re
+
+# ===============================
+# PAGE CONFIG
+# ===============================
+st.set_page_config(
+    page_title="Dashboard Kualitas Udara",
+    layout="wide"
+)
+
+# ===============================
 # BUSINESS QUESTIONS (SESUAI NOTEBOOK)
 # ===============================
 st.header("📌 Pertanyaan")
