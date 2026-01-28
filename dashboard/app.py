@@ -68,7 +68,21 @@ for col in required_cols:
         st.error(f"Kolom wajib `{col}` tidak ditemukan di dataset.")
         st.stop()
 
-df["datetime"] = pd.to_datetime(df["datetime"], errors="coerce")
+# =========================
+# FIX DATETIME (PRSA DATASET)
+# =========================
+required_time_cols = ["year", "month", "day", "hour"]
+
+missing_cols = [c for c in required_time_cols if c not in df.columns]
+if missing_cols:
+    st.error(f"Kolom waktu tidak lengkap: {missing_cols}")
+    st.stop()
+
+df["datetime"] = pd.to_datetime(
+    df[["year", "month", "day", "hour"]],
+    errors="coerce"
+)
+
 df = df.dropna(subset=["datetime"])
 df["year"] = df["datetime"].dt.year
 
