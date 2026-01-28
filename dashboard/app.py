@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
-import re
 
 # =========================
 # CONFIG
@@ -17,67 +15,34 @@ st.title("📊 Dashboard Kualitas Udara PM2.5")
 st.caption("Analisis Data Kualitas Udara Periode 2013–2017")
 
 # =========================
-# GOOGLE DRIVE HELPER
+# LOAD DATA (GOOGLE DRIVE)
 # =========================
-def gdrive_to_direct(url):
-    """
-    Convert Google Drive share link to direct download link
-    """
-    match = re.search(r"/d/([a-zA-Z0-9_-]+)", url)
-    if not match:
-        return None
-    file_id = match.group(1)
-    return f"https://drive.google.com/uc?export=download&id={file_id}"
-
-# =========================
-# SIDEBAR - DATA SOURCE
-# =========================
-st.sidebar.header("📂 Sumber Data")
-
-DEFAULT_DRIVE_LINK = "https://drive.google.com/file/d/1lVLq4IkZk_aFlZxPC7skeJu-kq98IoQY/"
-
-drive_link = st.sidebar.text_input(
-    "Link Google Drive (CSV)",
-    value=DEFAULT_DRIVE_LINK
-)
-
-direct_url = gdrive_to_direct(drive_link)
-
-if not direct_url:
-    st.error("❌ Link Google Drive tidak valid.")
-    st.stop()
+DATA_URL = "https://drive.google.com/uc?export=download&id=1VzRz-g9qG1hKMiSoj9-MqExUoWjOqlFr"
 
 @st.cache_data
 def load_data(url):
     return pd.read_csv(url)
 
 try:
-    df = load_data(direct_url)
-    st.sidebar.success("✅ Data berhasil dimuat")
+    df = load_data(DATA_URL)
+    st.success("✅ Data berhasil dimuat dari Google Drive")
 except Exception as e:
     st.error("❌ Gagal memuat data dari Google Drive")
     st.exception(e)
     st.stop()
 
 # =========================
-# PREPROCESSING
+# PREPROCESSING (PRSA)
 # =========================
-required_cols = ["datetime", "station", "PM2.5"]
-for col in required_cols:
-    if col not in df.columns:
-        st.error(f"Kolom wajib `{col}` tidak ditemukan di dataset.")
-        st.stop()
+required_cols = ["station", "PM2.5", "year", "month", "day", "hour"]
+missing = [c for c in required_cols if c not in df.columns]
 
-# =========================
-# FIX DATETIME (PRSA DATASET)
-# =========================
-required_time_cols = ["year", "month", "day", "hour"]
-
-missing_cols = [c for c in required_time_cols if c not in df.columns]
-if missing_cols:
-    st.error(f"Kolom waktu tidak lengkap: {missing_cols}")
+if missing:
+    st.error(f"Kolom wajib tidak lengkap: {missing}")
+    st.write("Kolom tersedia:", list(df.columns))
     st.stop()
 
+# buat datetime
 df["datetime"] = pd.to_datetime(
     df[["year", "month", "day", "hour"]],
     errors="coerce"
@@ -92,7 +57,7 @@ df["year"] = df["datetime"].dt.year
 st.sidebar.header("🔎 Filter Data")
 
 stations = sorted(df["station"].unique())
-station_selected = st.sidebar.multiselect(
+selected_stations = st.sidebar.multiselect(
     "Pilih Stasiun",
     options=stations,
     default=stations
@@ -107,7 +72,7 @@ year_range = st.sidebar.slider(
 )
 
 filtered_df = df[
-    (df["station"].isin(station_selected)) &
+    (df["station"].isin(selected_stations)) &
     (df["year"].between(year_range[0], year_range[1]))
 ]
 
@@ -193,10 +158,11 @@ lowest_station = station_avg.iloc[-1]["station"]
 lowest_value = station_avg.iloc[-1]["PM2.5"]
 
 st.markdown(f"""
-- Selama periode **2013–2017**, konsentrasi PM2.5 menunjukkan **pola fluktuatif tahunan** yang relatif konsisten di seluruh stasiun, mengindikasikan adanya pengaruh faktor musiman terhadap kualitas udara.
-- **Stasiun `{highest_station}`** tercatat memiliki **rata-rata PM2.5 tertinggi** sebesar **{highest_value:.2f} µg/m³**, sedangkan **stasiun `{lowest_station}`** memiliki tingkat paparan terendah dengan rata-rata **{lowest_value:.2f} µg/m³**.
+- Selama periode **2013–2017**, konsentrasi PM2.5 menunjukkan **pola fluktuatif tahunan** yang relatif konsisten di seluruh stasiun, yang mengindikasikan adanya pengaruh faktor musiman terhadap kualitas udara.
+- **Stasiun `{highest_station}`** memiliki **rata-rata PM2.5 tertinggi** sebesar **{highest_value:.2f} µg/m³**, sedangkan **stasiun `{lowest_station}`** mencatat **tingkat paparan terendah** dengan rata-rata **{lowest_value:.2f} µg/m³**.
 """)
 
 # =========================
 # FOOTER
 # =========================
+st.caption("© 2026 — Dashboard Analisis Data | Streamlit")
