@@ -50,15 +50,16 @@ df = df.dropna(subset=["datetime"])
 df["year"] = df["datetime"].dt.year
 
 # =========================
-# SIDEBAR FILTER
+# SIDEBAR FILTER (SELECTBOX + SEMUA STASIUN)
 # =========================
 st.sidebar.header("🔎 Filter Data")
 
 stations = sorted(df["station"].unique())
-selected_stations = st.sidebar.multiselect(
+stations_with_all = ["Semua Stasiun"] + stations
+
+selected_station = st.sidebar.selectbox(
     "Pilih Stasiun",
-    options=stations,
-    default=stations
+    options=stations_with_all
 )
 
 year_min, year_max = int(df["year"].min()), int(df["year"].max())
@@ -69,17 +70,22 @@ year_range = st.sidebar.slider(
     (2013, 2017)
 )
 
-filtered_df = df[
-    (df["station"].isin(selected_stations)) &
-    (df["year"].between(year_range[0], year_range[1]))
-]
+if selected_station == "Semua Stasiun":
+    filtered_df = df[
+        df["year"].between(year_range[0], year_range[1])
+    ]
+else:
+    filtered_df = df[
+        (df["station"] == selected_station) &
+        (df["year"].between(year_range[0], year_range[1]))
+    ]
 
 if filtered_df.empty:
     st.warning("⚠️ Data kosong setelah filter.")
     st.stop()
 
 # =========================
-# BUSINESS QUESTIONS (HARUS SAMA DENGAN NOTEBOOK)
+# BUSINESS QUESTIONS
 # =========================
 st.header("📌 Pertanyaan Analisis")
 
@@ -89,7 +95,7 @@ st.markdown("""
 """)
 
 # =========================
-# VISUALISASI 1 - DISTRIBUSI PM2.5 (BOXPLOT)
+# VISUALISASI 1 - DISTRIBUSI PM2.5
 # =========================
 st.subheader("📦 Distribusi Tingkat Paparan PM2.5 per Stasiun (2013–2017)")
 
