@@ -1,53 +1,84 @@
-# 📊 Dashboard Analisis Kualitas Udara PM2.5
+Siap. Dari struktur repo kamu **(app.py ada di folder `dashboard/`)**, ini aku **BUATKAN README.md yang PAS 1:1 dengan kondisi repo kamu** dan **sesuai permintaan reviewer Dicoding**.
 
-Proyek ini merupakan analisis data kualitas udara dengan fokus pada konsentrasi **PM2.5** di beberapa stasiun pemantauan selama periode **2013–2017**. Analisis dilakukan untuk memahami dinamika historis PM2.5 serta membandingkan tingkat paparan antar stasiun pengukuran.
-
-Hasil analisis disajikan dalam bentuk **dashboard interaktif** menggunakan **Streamlit** agar memudahkan eksplorasi data secara visual.
+👉 **Copy–paste INI PERSIS** ke file `README.md` di root repo kamu (gantikan isinya kalau perlu).
 
 ---
 
-## 🎯 Tujuan Proyek
-Proyek ini bertujuan untuk menjawab dua pertanyaan analisis utama:
-1. Bagaimana dinamika konsentrasi PM2.5 selama periode 2013–2017 berdasarkan data historis?
-2. Stasiun mana yang memiliki tingkat paparan PM2.5 tertinggi selama periode pengamatan 2013–2017?
+```markdown
+# Proyek Analisis Data – Dashboard PM2.5
+
+Proyek ini merupakan bagian dari **Proyek Analisis Data Dicoding** yang bertujuan untuk menganalisis kualitas udara **PM2.5 periode 2013–2017**.  
+Hasil analisis divisualisasikan dalam bentuk **dashboard interaktif menggunakan Streamlit**.
 
 ---
 
-## 📂 Sumber Data
-Dataset yang digunakan merupakan data kualitas udara dengan resolusi waktu per jam yang mencakup informasi:
-- Konsentrasi PM2.5  
-- Stasiun pemantauan  
-- Tahun, bulan, hari, dan jam pengamatan  
+## Struktur Proyek
 
-Data telah diproses terlebih dahulu untuk membentuk satu dataset utama dan disimpan dalam format CSV di Google Drive, kemudian digunakan langsung oleh dashboard.
+```
 
----
+.
+├── dashboard/
+│   └── app.py
+├── data2/
+├── Proyek_Analisis_Data.ipynb
+├── requirements.txt
+├── README.md
+└── url.txt
 
-## 🛠️ Tools & Library
-- Python  
-- Pandas  
-- Matplotlib  
-- Seaborn  
-- Streamlit  
+````
 
 ---
 
-## 📊 Fitur Dashboard
-Dashboard interaktif menampilkan:
-- Tren rata-rata tahunan konsentrasi PM2.5 pada setiap stasiun
-- Perbandingan rata-rata PM2.5 antar stasiun
-- Filter interaktif berdasarkan stasiun dan rentang tahun
+## Cara Menjalankan Dashboard
+
+Ikuti langkah-langkah berikut untuk menjalankan dashboard secara lokal.
+
+### 1. Clone repository
+```bash
+git clone https://github.com/wahyuramadhan2/Proyek-Analisis-Data.git
+````
+
+### 2. Masuk ke folder proyek
+
+```bash
+cd Proyek-Analisis-Data
+```
+
+### 3. Install dependencies
+
+Pastikan Python dan pip sudah terinstal, kemudian jalankan:
+
+```bash
+pip install -r requirements.txt
+```
+
+### 4. Jalankan aplikasi Streamlit
+
+Karena file `app.py` berada di dalam folder `dashboard`, gunakan perintah berikut:
+
+```bash
+streamlit run dashboard/app.py
+```
 
 ---
 
-## 🧠 Insight Utama
-Analisis menunjukkan bahwa konsentrasi PM2.5 selama periode 2013–2017 memiliki pola fluktuatif tahunan yang relatif konsisten di seluruh stasiun pemantauan. Meskipun demikian, terdapat perbedaan tingkat paparan yang cukup jelas antar stasiun, di mana beberapa stasiun secara konsisten mencatat rata-rata PM2.5 yang lebih tinggi dibandingkan stasiun lainnya. Hal ini mengindikasikan bahwa faktor lokasi dan karakteristik lingkungan sekitar stasiun berperan dalam tingkat pencemaran udara.
+## Fitur Dashboard
+
+* Visualisasi distribusi tingkat paparan PM2.5 di setiap stasiun
+* Visualisasi frekuensi kondisi kualitas udara tidak sehat
+* Filter interaktif berdasarkan stasiun dan rentang tahun
+* Opsi **“Semua Stasiun”** untuk memudahkan perbandingan data
 
 ---
 
-## 🚀 Cara Menjalankan Dashboard
-1. Pastikan file Python dashboard tersedia (misalnya `app.py`).
-2. Pastikan dataset dapat diakses melalui Google Drive dengan pengaturan *Anyone with the link – Viewer*.
-3. Jalankan dashboard dengan perintah:
-   ```bash
-   streamlit run app.py
+## Catatan
+
+* Data dimuat dari Google Drive sehingga memerlukan koneksi internet aktif.
+* Dashboard ini dibuat untuk memenuhi kriteria **Kriteria 4: Membuat Dashboard Sederhana Menggunakan Streamlit**.
+
+---
+
+© 2026 — Proyek Analisis Data | Streamlit
+
+Kalau setelah submit masih ada feedback (jarang, tapi bisa), kirim aja ke sini — kita beresin cepat.
+```
