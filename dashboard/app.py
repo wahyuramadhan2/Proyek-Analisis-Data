@@ -32,17 +32,15 @@ except Exception as e:
     st.stop()
 
 # =========================
-# PREPROCESSING (PRSA)
+# PREPROCESSING
 # =========================
 required_cols = ["station", "PM2.5", "year", "month", "day", "hour"]
 missing = [c for c in required_cols if c not in df.columns]
 
 if missing:
     st.error(f"Kolom wajib tidak lengkap: {missing}")
-    st.write("Kolom tersedia:", list(df.columns))
     st.stop()
 
-# buat datetime
 df["datetime"] = pd.to_datetime(
     df[["year", "month", "day", "hour"]],
     errors="coerce"
@@ -81,85 +79,75 @@ if filtered_df.empty:
     st.stop()
 
 # =========================
-# BUSINESS QUESTIONS
+# BUSINESS QUESTIONS (HARUS SAMA DENGAN NOTEBOOK)
 # =========================
 st.header("📌 Pertanyaan Analisis")
 
 st.markdown("""
-1. **Bagaimana dinamika konsentrasi PM2.5 selama periode 2013–2017 berdasarkan data historis?**  
-2. **Stasiun mana yang memiliki tingkat paparan PM2.5 tertinggi selama periode pengamatan 2013–2017?**
+1. **Bagaimana distribusi tingkat paparan PM2.5 di setiap stasiun pemantauan selama periode 2013–2017?**  
+2. **Stasiun mana yang paling sering mengalami kondisi kualitas udara tidak sehat berdasarkan kategori PM2.5 selama periode 2013–2017?**
 """)
 
 # =========================
-# VISUALISASI 1 - TREN TAHUNAN
+# VISUALISASI 1 - DISTRIBUSI PM2.5 (BOXPLOT)
 # =========================
-st.subheader("📈 Tren Rata-rata PM2.5 Tahunan")
-
-annual_pm25 = (
-    filtered_df
-    .groupby(["year", "station"])["PM2.5"]
-    .mean()
-    .reset_index()
-)
+st.subheader("📦 Distribusi Tingkat Paparan PM2.5 per Stasiun (2013–2017)")
 
 fig, ax = plt.subplots(figsize=(12, 5))
-sns.lineplot(
-    data=annual_pm25,
-    x="year",
+sns.boxplot(
+    data=filtered_df,
+    x="station",
     y="PM2.5",
-    hue="station",
-    marker="o",
     ax=ax
 )
 
-ax.set_xlabel("Tahun")
+ax.set_xlabel("Stasiun")
 ax.set_ylabel("PM2.5 (µg/m³)")
-ax.set_title("Tren Tahunan Konsentrasi PM2.5")
-ax.legend(title="Stasiun", bbox_to_anchor=(1.05, 1), loc="upper left")
+ax.set_title("Distribusi Tingkat Paparan PM2.5 di Setiap Stasiun")
+plt.xticks(rotation=45)
 plt.tight_layout()
 st.pyplot(fig)
 
 # =========================
-# VISUALISASI 2 - PER STASIUN
+# VISUALISASI 2 - FREKUENSI PM2.5 TIDAK SEHAT
 # =========================
-st.subheader("🏭 Rata-rata PM2.5 per Stasiun")
+st.subheader("🚨 Frekuensi Kondisi PM2.5 Tidak Sehat per Stasiun (2013–2017)")
 
-station_avg = (
-    filtered_df
-    .groupby("station")["PM2.5"]
-    .mean()
+UNHEALTHY_THRESHOLD = 55  # ambang PM2.5 tidak sehat
+
+unhealthy_counts = (
+    filtered_df[filtered_df["PM2.5"] > UNHEALTHY_THRESHOLD]
+    .groupby("station")
+    .size()
     .sort_values(ascending=False)
-    .reset_index()
+    .reset_index(name="Jumlah Observasi Tidak Sehat")
 )
 
 fig, ax = plt.subplots(figsize=(10, 5))
 sns.barplot(
-    data=station_avg,
-    x="PM2.5",
+    data=unhealthy_counts,
+    x="Jumlah Observasi Tidak Sehat",
     y="station",
     ax=ax
 )
 
-ax.set_xlabel("Rata-rata PM2.5 (µg/m³)")
+ax.set_xlabel("Jumlah Observasi Tidak Sehat")
 ax.set_ylabel("Stasiun")
-ax.set_title("Perbandingan Rata-rata PM2.5 Antar Stasiun")
+ax.set_title("Frekuensi Kondisi PM2.5 Tidak Sehat per Stasiun")
 plt.tight_layout()
 st.pyplot(fig)
 
 # =========================
-# INSIGHT (GABUNG P1 & P2)
+# INSIGHT
 # =========================
 st.subheader("🧠 Insight Utama")
 
-highest_station = station_avg.iloc[0]["station"]
-highest_value = station_avg.iloc[0]["PM2.5"]
-
-lowest_station = station_avg.iloc[-1]["station"]
-lowest_value = station_avg.iloc[-1]["PM2.5"]
+most_unhealthy_station = unhealthy_counts.iloc[0]["station"]
+most_unhealthy_count = unhealthy_counts.iloc[0]["Jumlah Observasi Tidak Sehat"]
 
 st.markdown(f"""
-- Selama periode **2013–2017**, konsentrasi PM2.5 menunjukkan **pola fluktuatif tahunan** yang relatif konsisten di seluruh stasiun, yang mengindikasikan adanya pengaruh faktor musiman terhadap kualitas udara.
-- **Stasiun `{highest_station}`** memiliki **rata-rata PM2.5 tertinggi** sebesar **{highest_value:.2f} µg/m³**, sedangkan **stasiun `{lowest_station}`** mencatat **tingkat paparan terendah** dengan rata-rata **{lowest_value:.2f} µg/m³**.
+- Distribusi PM2.5 di setiap stasiun menunjukkan variasi yang cukup besar, menandakan adanya perbedaan tingkat paparan polusi udara antar lokasi pemantauan selama periode 2013–2017.
+- **Stasiun `{most_unhealthy_station}`** merupakan stasiun yang **paling sering mengalami kondisi kualitas udara tidak sehat**, dengan total **{most_unhealthy_count} observasi PM2.5 di atas ambang batas tidak sehat**.
 """)
 
 # =========================
