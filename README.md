@@ -15,7 +15,7 @@ Hasil analisis divisualisasikan dalam bentuk **dashboard interaktif menggunakan 
 ├── Proyek_Analisis_Data.ipynb
 ├── requirements.txt
 ├── README.md
-└── url.txt
+└── urt.txt
 ```
 
 ---
